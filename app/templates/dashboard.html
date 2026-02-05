@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>aimie-watchdog</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h2>aimie-watchdog</h2>
+
+  {% if not snapshot %}
+    <p class="muted">아직 스냅샷이 없습니다. <code>python run.py collect</code> 먼저 실행하세요.</p>
+  {% else %}
+    <p class="muted">
+      마지막 수집: <b>{{ snapshot.ts }}</b> /
+      OK: {{ snapshot.summary.ok }} /
+      WARN: {{ snapshot.summary.warn }} /
+      CRIT: {{ snapshot.summary.crit }}
+    </p>
+  {% endif %}
+
+  <table>
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>IP</th>
+        <th>Status</th>
+        <th>Checks</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in servers %}
+        {% set row = status_map.get(s.name) if status_map else None %}
+        <tr>
+          <td><b>{{ s.name }}</b></td>
+          <td>{{ s.ip }}</td>
+          <td class="{{ row.status if row else 'muted' }}">
+            {{ row.status if row else 'N/A' }}
+          </td>
+          <td>
+            {% if row %}
+              {{ row.checks | length }} checks
+            {% else %}
+              <span class="muted">-</span>
+            {% endif %}
+          </td>
+          <td><a href="/server/{{ s.name }}">detail</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <hr/>
+  <p class="muted">
+    수집 실행: <code>python run.py collect</code> /
+    웹 실행: <code>python run.py web --port 8080</code>
+  </p>
+</body>
+</html>

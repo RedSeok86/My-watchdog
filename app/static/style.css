@@ -1,0 +1,11 @@
+body { font-family: Arial, sans-serif; margin: 24px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 10px; vertical-align: top; }
+th { background: #f6f6f6; text-align: left; }
+
+.OK { color: #0a7; font-weight: 700; }
+.WARN { color: #d80; font-weight: 700; }
+.CRIT { color: #d11; font-weight: 700; }
+
+.muted { color: #777; }
+code { white-space: pre-wrap; }

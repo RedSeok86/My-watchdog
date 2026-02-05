@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ server_name }} - aimie-watchdog</title>
+ <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <p><a href="/">← dashboard</a></p>
+  <h2>{{ server_name }}</h2>
+
+  {% if not latest %}
+    <p class="muted">최신 스냅샷이 없습니다.</p>
+  {% else %}
+    <p>Status: <span class="{{ latest.status }}">{{ latest.status }}</span></p>
+
+    <h3>Latest checks</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Severity</th>
+          <th>OK</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in latest.checks %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td class="{{ c.severity }}">{{ c.severity }}</td>
+          <td>{{ "YES" if c.ok else "NO" }}</td>
+          <td><code>{{ c.message }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h3>Latest diff</h3>
+  {% if not diff %}
+    <p class="muted">diff 없음(스냅샷 2개 이상 필요)</p>
+  {% else %}
+    <p class="muted">{{ diff.new_ts }} vs {{ diff.old_ts }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Old</th>
+          <th>New</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in diff.changes %}
+        <tr>
+          <td>{{ d.check }}</td>
+          <td><code>{{ d.old }}</code></td>
+          <td><code>{{ d.new }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h3>History (latest 20)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Snapshot</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in history %}
+      <tr>
+        <td>{{ h.ts }}</td>
+        <td><code>{{ h.snapshot_id }}</code></td>
+        <td class="{{ h.status }}">{{ h.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
