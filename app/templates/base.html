@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}aimie-watchdog{% endblock %}</title>
+
+  <!-- Tabler -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" />
+
+  <!-- Custom -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="page">
+    <!-- 상단 네비게이션 -->
+    <header class="navbar navbar-expand-md d-print-none app-topbar">
+      <div class="container-xl">
+        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3 m-0">
+          <a href="{{ url_for('watchdog.dashboard') }}" class="text-decoration-none fw-bold fs-2">
+            aimie-watchdog
+          </a>
+        </h1>
+
+        <div class="navbar-nav flex-row order-md-last">
+          {% block top_right %}
+          <!-- 필요하면 상태 뱃지/시간 넣기 -->
+          {% endblock %}
+        </div>
+      </div>
+    </header>
+
+    <div class="page-wrapper">
+      <div class="container-xl py-4">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

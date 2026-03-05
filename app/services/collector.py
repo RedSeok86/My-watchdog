@@ -1,15 +1,15 @@
 import socket
+import re
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
 import requests
 import hashlib
-import textwrap
-
 
 from app.services.inventory import get_servers
 from app.services.ssm_exec import run_shell
 from app.services.storage import write_snapshot, get_latest_snapshot, get_previous_snapshot
 from app.services.diff import build_and_store_diff
+from app.services.alerts import load_alerts, save_alerts, upsert_alert
 
 
 def tcp_check(host: str, port: int, timeout: int = 3) -> Tuple[bool, str]:
@@ -72,6 +72,32 @@ def decide_server_status(checks: List[Dict[str, Any]]) -> str:
     return "OK"
 
 
+# -----------------------------
+#  민감정보 마스킹 로직 추가
+# -----------------------------
+SENSITIVE_PATTERNS = [
+    # KEY=VALUE 형태 (비번/토큰/키)
+    (
+        re.compile(
+            r'(?i)\b(pass(word)?|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)\b\s*[:=]\s*([^\s"\']+|".+?"|\'.+?\')'
+        ),
+        r"\1=****",
+    ),
+    # Authorization Bearer 토큰
+    (
+        re.compile(r"(?i)\bAuthorization:\s*Bearer\s+[A-Za-z0-9\-\._~\+/]+=*"),
+        "Authorization: Bearer ****",
+    ),
+]
+
+
+def mask_sensitive(text: str) -> str:
+    out = text
+    for pat, repl in SENSITIVE_PATTERNS:
+        out = pat.sub(repl, out)
+    return out
+
+
 def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
     servers = get_servers()
 
@@ -82,10 +108,14 @@ def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
         "summary": {"ok": 0, "warn": 0, "crit": 0},
     }
 
+    # ✅ 추가: alerts.json 로드 (없으면 {})
+    alerts = load_alerts()
+
     for s in servers:
         checks: List[Dict[str, Any]] = []
 
         ip = s["ip"]
+
         # TCP
         for port in s.get("tcp_ports", []) or []:
             ok, msg = tcp_check(ip, int(port), timeout=3)
@@ -124,21 +154,21 @@ def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
                     if svc:
                         checks.append(ssm_systemd_active(instance_id, svc, wait_seconds=20))
                 elif ctype == "command_text":
-                        checks.append(ssm_command_text(
-                            instance_id,
-                            name=c.get("name", "command"),
-                            cmd=c.get("cmd", "echo missing-cmd"),
-                            wait_seconds=int(c.get("wait_seconds", 20)),
-                            max_chars=int(c.get("max_chars", 1800)),
-                        ))
+                    checks.append(ssm_command_text(
+                        instance_id,
+                        name=c.get("name", "command"),
+                        cmd=c.get("cmd", "echo missing-cmd"),
+                        wait_seconds=int(c.get("wait_seconds", 20)),
+                        # 기본 600자로 줄이고, inventory에서 max_chars 주면 그 값 사용
+                        max_chars=int(c.get("max_chars", 600)),
+                    ))
                 elif ctype == "command_hash":
-                        checks.append(ssm_command_hash(
-                            instance_id,
-                            name=c.get("name", "command"),
-                            cmd=c.get("cmd", "echo missing-cmd"),
-                            wait_seconds=int(c.get("wait_seconds", 20)),
-                        ))
-
+                    checks.append(ssm_command_hash(
+                        instance_id,
+                        name=c.get("name", "command"),
+                        cmd=c.get("cmd", "echo missing-cmd"),
+                        wait_seconds=int(c.get("wait_seconds", 20)),
+                    ))
                 else:
                     checks.append({
                         "name": f"SSM {ctype}",
@@ -146,7 +176,6 @@ def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
                         "severity": "WARN",
                         "message": f"Unknown SSM check type: {ctype}",
                     })
-
 
         status = decide_server_status(checks)
 
@@ -157,12 +186,19 @@ def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
             "checks": checks,
         })
 
+        # ✅ 추가: 알람 upsert (OK여도 삭제하지 않고 resolved 처리)
+        # snapshot["ts"]를 같이 넘겨서 시간 일관성 유지
+        upsert_alert(alerts, s["name"], status, checks, ts=snapshot["ts"])
+
         if status == "OK":
             snapshot["summary"]["ok"] += 1
         elif status == "WARN":
             snapshot["summary"]["warn"] += 1
         else:
             snapshot["summary"]["crit"] += 1
+
+    # ✅ 추가: 루프 끝나고 한 번 저장
+    save_alerts(alerts)
 
     sid = write_snapshot(snapshot)
     snapshot["id"] = sid
@@ -175,9 +211,11 @@ def run_collection_once(make_diff: bool = True) -> Dict[str, Any]:
 
     return snapshot
 
-def ssm_command_text(instance_id: str, name: str, cmd: str, wait_seconds: int = 20, max_chars: int = 1800) -> Dict[str, Any]:
+
+def ssm_command_text(instance_id: str, name: str, cmd: str, wait_seconds: int = 20, max_chars: int = 600) -> Dict[str, Any]:
     """
     SSM으로 명령 실행 결과(텍스트)를 저장.
+    - 민감정보 마스킹
     - 너무 길면 잘라서 저장
     - 실패하면 CRIT
     """
@@ -186,6 +224,8 @@ def ssm_command_text(instance_id: str, name: str, cmd: str, wait_seconds: int = 
         return {"name": f"CMD {name}", "ok": False, "severity": "CRIT", "message": out}
 
     out = (out or "").strip()
+    out = mask_sensitive(out)
+
     if len(out) > max_chars:
         out = out[:max_chars] + "\n...(truncated)"
     return {"name": f"CMD {name}", "ok": True, "severity": "OK", "message": out}
@@ -205,4 +245,3 @@ def ssm_command_hash(instance_id: str, name: str, cmd: str, wait_seconds: int = 
     h = hashlib.sha256(out.encode("utf-8", errors="ignore")).hexdigest()
     lines = out.count("\n") + (1 if out else 0)
     return {"name": f"HASH {name}", "ok": True, "severity": "OK", "message": f"sha256={h} lines={lines}"}
-
