@@ -1,0 +1,16 @@
+[
+  {
+    "name": "sample-server-1",
+    "ip": "10.0.0.10",
+    "tcp_ports": [80, 443],
+    "http_urls": ["http://10.0.0.10/health"],
+    "ssm_instance_id": "i-example11111111111"
+  },
+  {
+    "name": "sample-server-2",
+    "ip": "10.0.0.20",
+    "tcp_ports": [8080],
+    "http_urls": [],
+    "ssm_instance_id": "i-example22222222222"
+  }
+]
