@@ -1,9 +1,7 @@
 .venv/
-.idea/
 __pycache__/
 *.pyc
-
 data/
-*.db
-*.sqlite
+.env
+inventory.json
 *.log
