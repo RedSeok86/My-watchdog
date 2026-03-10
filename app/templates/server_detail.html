@@ -1,477 +1,85 @@
-{% extends "base.html" %}
-
-{% block title %}{{ server_name }} - aimie-watchdog{% endblock %}
-
-{% block top_right %}
-  {% if latest %}
-    {% if latest.status == 'OK' %}
-      <span class="badge bg-success-lt text-success">OK</span>
-    {% elif latest.status == 'WARN' %}
-      <span class="badge bg-warning-lt text-warning">WARN</span>
-    {% elif latest.status == 'CRIT' %}
-      <span class="badge bg-danger-lt text-danger">CRIT</span>
-    {% else %}
-      <span class="badge bg-secondary-lt text-secondary">{{ latest.status }}</span>
-    {% endif %}
-  {% endif %}
-{% endblock %}
-
-{% block head_extra %}
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-  .status-badge {
-    min-width: 70px;
-    display: inline-flex;
-    justify-content: center;
-    font-weight: 700;
-  }
-
-  .mono-wrap {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    white-space: pre-wrap;
-    word-break: break-word;
-    background: #f6f8fb;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.45;
-    color: #111827 !important;
-    opacity: 1 !important;
-  }
-
-  .mono-wrap * {
-    color: inherit !important;
-  }
-
-  .table td, .table th {
-    vertical-align: middle;
-  }
-
-  .page-title-tight {
-    letter-spacing: -0.02em;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-  <!-- 상단 헤더 -->
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <div>
-      <div class="mb-2">
-        <a href="{{ url_for('watchdog.dashboard') }}" class="btn btn-sm btn-outline-secondary">
-          ← dashboard
-        </a>
-      </div>
-      <h1 class="page-title-tight mb-0">{{ server_name }}</h1>
-    </div>
-
-    {% if latest %}
-      <div>
-        {% if latest.status == 'OK' %}
-          <span class="badge bg-success-lt text-success status-badge">OK</span>
-        {% elif latest.status == 'WARN' %}
-          <span class="badge bg-warning-lt text-warning status-badge">WARN</span>
-        {% elif latest.status == 'CRIT' %}
-          <span class="badge bg-danger-lt text-danger status-badge">CRIT</span>
-        {% else %}
-          <span class="badge bg-secondary-lt text-secondary status-badge">{{ latest.status }}</span>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ server_name }} - aimie-watchdog</title>
+ <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <p><a href="/">← dashboard</a></p>
+  <h2>{{ server_name }}</h2>
 
   {% if not latest %}
-    <div class="card">
-      <div class="card-body">
-        <div class="text-secondary">최신 스냅샷이 없습니다.</div>
-      </div>
-    </div>
+    <p class="muted">최신 스냅샷이 없습니다.</p>
   {% else %}
+    <p>Status: <span class="{{ latest.status }}">{{ latest.status }}</span></p>
 
-    <!-- 요약 카드 -->
-    <div class="row row-cards mb-3">
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <div class="text-secondary mb-1">현재 상태</div>
-            <div>
-              {% if latest.status == 'OK' %}
-                <span class="badge bg-success-lt text-success status-badge">OK</span>
-              {% elif latest.status == 'WARN' %}
-                <span class="badge bg-warning-lt text-warning status-badge">WARN</span>
-              {% elif latest.status == 'CRIT' %}
-                <span class="badge bg-danger-lt text-danger status-badge">CRIT</span>
-              {% else %}
-                <span class="badge bg-secondary-lt text-secondary status-badge">{{ latest.status }}</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <div class="text-secondary mb-1">Latest checks</div>
-            <div class="h3 mb-0">{{ latest.checks | length }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <div class="text-secondary mb-1">History entries</div>
-            <div class="h3 mb-0">{{ history | length }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Latest checks -->
-    <div class="card mb-3">
-      <div class="card-header">
-        <h3 class="card-title mb-0">Latest checks</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-vcenter card-table">
-          <thead>
-            <tr>
-              <th>Check</th>
-              <th>Severity</th>
-              <th>OK</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in latest.checks %}
-            <tr>
-              <td class="fw-semibold">{{ c.name }}</td>
-
-              <td>
-                {% if c.severity == 'OK' %}
-                  <span class="badge bg-success-lt text-success">OK</span>
-                {% elif c.severity == 'WARN' %}
-                  <span class="badge bg-warning-lt text-warning">WARN</span>
-                {% elif c.severity == 'CRIT' %}
-                  <span class="badge bg-danger-lt text-danger">CRIT</span>
-                {% else %}
-                  <span class="badge bg-secondary-lt text-secondary">{{ c.severity }}</span>
-                {% endif %}
-              </td>
-
-              <td>
-                {% if c.ok %}
-                  <span class="badge bg-success-lt text-success">YES</span>
-                {% else %}
-                  <span class="badge bg-danger-lt text-danger">NO</span>
-                {% endif %}
-              </td>
-
-              <td>
-                <pre class="mono-wrap">{{ c.message }}</pre>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+    <h3>Latest checks</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Severity</th>
+          <th>OK</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in latest.checks %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td class="{{ c.severity }}">{{ c.severity }}</td>
+          <td>{{ "YES" if c.ok else "NO" }}</td>
+          <td><code>{{ c.message }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
 
-  <!-- Process history (7d) -->
-  <div class="card mb-3">
-    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <h3 class="card-title mb-0">Process history (7d)</h3>
+  <h3>Latest diff</h3>
+  {% if not diff %}
+    <p class="muted">diff 없음(스냅샷 2개 이상 필요)</p>
+  {% else %}
+    <p class="muted">{{ diff.new_ts }} vs {{ diff.old_ts }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Old</th>
+          <th>New</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in diff.changes %}
+        <tr>
+          <td>{{ d.check }}</td>
+          <td><code>{{ d.old }}</code></td>
+          <td><code>{{ d.new }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
-      <div class="d-flex flex-wrap align-items-center gap-2">
-        <!-- 프로세스 선택 (하나만) -->
-        <form method="get" class="d-flex align-items-center gap-2 m-0">
-          <label for="processSelect" class="text-secondary small mb-0">Process</label>
-          <select id="processSelect" name="process" class="form-select form-select-sm" style="min-width: 160px;">
-            {% for pkey, plabel in process_choices %}
-              <option value="{{ pkey }}" {% if selected_process == pkey %}selected{% endif %}>
-                {{ plabel }}
-              </option>
-            {% endfor %}
-          </select>
-
-          <!-- 기존 range 유지 -->
-          <input type="hidden" name="range" value="{{ history_range or '7d' }}">
-
-          <button type="submit" class="btn btn-sm btn-outline-primary">조회</button>
-        </form>
-
-        <!-- CSV 다운로드 -->
-        <a href="{{ url_for('watchdog.server_process_history_csv', name=server_name, process=selected_process) }}"
-           class="btn btn-sm btn-outline-secondary">
-          CSV 다운로드
-        </a>
-      </div>
-    </div>
-
-    <div class="card-body">
-      <div class="text-secondary small mb-2">
-        선택한 프로세스의 최근 7일 상태 (UP=1, DOWN=0)
-      </div>
-
-      <div style="height: 280px;">
-        <canvas id="processHistoryChart"></canvas>
-      </div>
-
-      <script id="processTimelineJson" type="text/plain">
-        {{ (process_timeline_points or []) | tojson }}
-      </script>
-    </div>
-
-    <!-- 최근 전환 이벤트 -->
-    <div class="table-responsive border-top">
-      <table class="table table-vcenter card-table mb-0">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Event</th>
-            <th>Transition</th>
-            <th>Severity</th>
-            <th>Check</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if process_events %}
-            {% for e in process_events[:20] %}
-              <tr>
-                <td>{{ e.ts }}</td>
-
-                <td>
-                  {% if e.type == 'UP' %}
-                    <span class="badge bg-success-lt text-success">UP</span>
-                  {% else %}
-                    <span class="badge bg-danger-lt text-danger">DOWN</span>
-                  {% endif %}
-                </td>
-
-                <td>
-                  <code>{{ e.from }}</code> → <code>{{ e.to }}</code>
-                </td>
-
-                <td>
-                  {% if e.severity == 'OK' %}
-                    <span class="badge bg-success-lt text-success">OK</span>
-                  {% elif e.severity == 'WARN' %}
-                    <span class="badge bg-warning-lt text-warning">WARN</span>
-                  {% elif e.severity == 'CRIT' %}
-                    <span class="badge bg-danger-lt text-danger">CRIT</span>
-                  {% elif e.severity %}
-                    <span class="badge bg-secondary-lt text-secondary">{{ e.severity }}</span>
-                  {% else %}
-                    <span class="text-secondary">-</span>
-                  {% endif %}
-                </td>
-
-                <td>{{ e.check_name or '-' }}</td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5" class="text-secondary">
-                최근 7일 내 선택한 프로세스의 상태 전환 이벤트가 없습니다. (또는 체크명이 아직 매칭되지 않음)
-              </td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-
-
-  <!-- Latest diff -->
-  <div class="card mb-3">
-    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <h3 class="card-title mb-0">Latest diff</h3>
-      {% if diff %}
-        <div class="text-secondary small">
-          {{ diff.new_ts }} vs {{ diff.old_ts }}
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="card-body p-0">
-      {% if not diff %}
-        <div class="p-3 text-secondary">diff 없음 (스냅샷 2개 이상 필요)</div>
-      {% else %}
-        <div class="table-responsive">
-          <table class="table table-vcenter card-table mb-0">
-            <thead>
-              <tr>
-                <th>Check</th>
-                <th>Old</th>
-                <th>New</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for d in diff.changes %}
-              <tr>
-                <td class="fw-semibold">{{ d.check }}</td>
-                <td><pre class="mono-wrap">{{ d.old }}</pre></td>
-                <td><pre class="mono-wrap">{{ d.new }}</pre></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- History -->
-  <div class="card">
-    <div class="card-header">
-      <h3 class="card-title mb-0">History (latest 20)</h3>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-vcenter card-table">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Snapshot</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if history %}
-            {% for h in history %}
-            <tr>
-              <td>{{ h.ts }}</td>
-              <td><code>{{ h.snapshot_id }}</code></td>
-              <td>
-                {% if h.status == 'OK' %}
-                  <span class="badge bg-success-lt text-success">OK</span>
-                {% elif h.status == 'WARN' %}
-                  <span class="badge bg-warning-lt text-warning">WARN</span>
-                {% elif h.status == 'CRIT' %}
-                  <span class="badge bg-danger-lt text-danger">CRIT</span>
-                {% else %}
-                  <span class="badge bg-secondary-lt text-secondary">{{ h.status }}</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="3" class="text-secondary">히스토리가 없습니다.</td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-{% endblock %}
-{% block scripts %}
-<script>
-  (function() {
-    const el = document.getElementById("processHistoryChart");
-    if (!el) return;
-    
-    const jsonEl = document.getElementById("processTimelineJson");
-    const points = jsonEl ? JSON.parse(jsonEl.textContent || "[]") : [];
-    function formatLabelDayHourMin(s) {
-  // 입력 예: "2026-02-25 14:15:38"
-    if (!s) return "";
-
-    // " " 또는 "T" 둘 다 대응
-    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
-    if (!m) return s;
-
-    const day = m[3];   // "25"
-    const hh = m[4];    // "14"
-    const mm = m[5];    // "15"
-
-    return `${day}-${hh}:${mm}`; // "25-14:15"
-    }
-    const labels = points.map(p => formatLabelDayHourMin(p.x));
-    const values = points.map(p => p.y);
-
-    new Chart(el, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "UP/DOWN",
-          data: values,
-          stepped: "after",
-          tension: 0,
-          pointRadius: 0,
-          pointHoverRadius: 3,
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        interaction: {
-          mode: "nearest",
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            display: true
-          },
-          tooltip: {
-            callbacks: {
-              title: function(items) {
-                if (!items || !items.length) return "";
-                return items[0].label;
-              },
-              label: function(ctx) {
-                const idx = ctx.dataIndex;
-                const p = points[idx];
-                const st = (p && p.status) ? p.status : (ctx.raw === 1 ? "UP" : "DOWN");
-                const sev = (p && p.severity) ? ` / ${p.severity}` : "";
-                return `상태: ${st}${sev}`;
-              },
-              afterLabel: function(ctx) {
-                const idx = ctx.dataIndex;
-                const p = points[idx];
-                if (!p) return "";
-                const lines = [];
-                if (p.check_name) lines.push(`체크: ${p.check_name}`);
-                if (p.snapshot_id) lines.push(`snapshot: ${p.snapshot_id}`);
-                return lines;
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            min: 0,
-            max: 1,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                if (value === 1) return "UP";
-                if (value === 0) return "DOWN";
-                return value;
-              }
-            }
-          },
-          x: {
-            ticks: {
-              maxTicksLimit: 8
-            }
-          }
-        }
-      }
-    });
-  })();
-</script>
-{% endblock %}
-
-
+  <h3>History (latest 20)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Snapshot</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in history %}
+      <tr>
+        <td>{{ h.ts }}</td>
+        <td><code>{{ h.snapshot_id }}</code></td>
+        <td class="{{ h.status }}">{{ h.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
