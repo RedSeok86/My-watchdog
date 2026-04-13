@@ -1,4 +1,3 @@
-# /home/ubuntu/My-watchdog/app/services/alerts.py
 import json
 import os
 from datetime import datetime, timezone

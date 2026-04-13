@@ -1,90 +1,11 @@
-/* app/static/style.css */
-/* Tabler와 같이 사용할 때 충돌 줄이기 위한 watchdog scoped 스타일 */
+body { font-family: Arial, sans-serif; margin: 24px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 10px; vertical-align: top; }
+th { background: #f6f6f6; text-align: left; }
 
-:root{
-  --wd-ok:#16a34a;
-  --wd-warn:#d97706;
-  --wd-crit:#dc2626;
-}
+.OK { color: #0a7; font-weight: 700; }
+.WARN { color: #d80; font-weight: 700; }
+.CRIT { color: #d11; font-weight: 700; }
 
-/* ===== watchdog page scoped ===== */
-.watchdog-page h1,
-.watchdog-page h2,
-.watchdog-page h3 {
-  letter-spacing: -0.02em;
-}
-
-/* muted fallback (Tabler text-secondary 쓰는 곳 외에도 호환용) */
-.watchdog-page .muted{
-  color:#6b7280;
-}
-
-/* 상태 텍스트 fallback (예전 템플릿 class="OK/WARN/CRIT" 호환) */
-.watchdog-page .OK,
-.watchdog-page .WARN,
-.watchdog-page .CRIT{
-  font-weight:700;
-  letter-spacing:.2px;
-}
-.watchdog-page .OK{ color: var(--wd-ok); }
-.watchdog-page .WARN{ color: var(--wd-warn); }
-.watchdog-page .CRIT{ color: var(--wd-crit); }
-
-/* code 태그를 Tabler 카드 안에서도 보기 좋게 */
-.watchdog-page code{
-  background:#111827;
-  color:#fff;
-  padding:2px 6px;
-  border-radius:8px;
-  font-size:12px;
-}
-
-/* alarm row 안 버튼/폼 정렬 보조 */
-.watchdog-page .alert form{
-  margin:0;
-}
-
-/* detail 페이지 pre block (메시지) */
-.watchdog-page .mono-wrap {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: #f6f8fb;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: #111827 !important;
-  opacity: 1 !important;
-}
-
-.watchdog-page .mono-wrap * {
-  color: inherit !important;
-}
-
-.watchdog-page .status-badge {
-  min-width: 70px;
-  display: inline-flex;
-  justify-content: center;
-  font-weight: 700;
-}
-
-/* 테이블 행 세로정렬 통일 */
-.watchdog-page .table td,
-.watchdog-page .table th {
-  vertical-align: middle;
-}
-
-/* dashboard 자동새로고침 카드 spacing 보조 */
-.watchdog-page .wd-auto-refresh .card-body{
-  min-height: 52px;
-}
-
-/* 모바일에서 알람줄 버튼 줄바꿈시 보기 좋게 */
-@media (max-width: 768px) {
-  .watchdog-page .wd-alert-row .alert .d-flex {
-    align-items: flex-start !important;
-  }
-}
+.muted { color: #777; }
+code { white-space: pre-wrap; }

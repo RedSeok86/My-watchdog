@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchdog - Mazer Test</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='mazer/assets/css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mazer/assets/vendors/iconly/bold.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mazer/assets/vendors/perfect-scrollbar/perfect-scrollbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mazer/assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mazer/assets/css/app.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='mazer/assets/images/favicon.svg') }}" type="image/x-icon">
+</head>
+
+<body>
+    <div id="app">
+        <div id="sidebar" class="active">
+            <div class="sidebar-wrapper active">
+                <div class="sidebar-header">
+                    <div class="d-flex justify-content-between">
+                        <div class="logo">
+                            <a href="/mazer-test">
+                                <img src="{{ url_for('static', filename='mazer/assets/images/logo/logo.png') }}" alt="Logo">
+                            </a>
+                        </div>
+                        <div class="toggler">
+                            <a href="#" class="sidebar-hide d-xl-none d-block">
+                                <i class="bi bi-x bi-middle"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-menu">
+                    <ul class="menu">
+                        <li class="sidebar-title">Menu</li>
+
+                        <li class="sidebar-item active">
+                            <a href="/mazer-test" class="sidebar-link">
+                                <i class="bi bi-grid-fill"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a href="/" class="sidebar-link">
+                                <i class="bi bi-house-fill"></i>
+                                <span>Watchdog Home</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a href="/server/test-server" class="sidebar-link">
+                                <i class="bi bi-hdd-network-fill"></i>
+                                <span>Server Detail Test</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="sidebar-toggler btn x">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="main">
+            <header class="mb-3">
+                <a href="#" class="burger-btn d-block d-xl-none">
+                    <i class="bi bi-justify fs-3"></i>
+                </a>
+            </header>
+
+            <div class="page-heading">
+                <h3>aimie-watchdog Dashboard</h3>
+            </div>
+
+            <div class="page-content">
+                <section class="row">
+                    <div class="col-12 col-lg-9">
+                        <div class="row">
+                            <div class="col-6 col-lg-3 col-md-6">
+                                <div class="card">
+                                    <div class="card-body px-3 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stats-icon purple">
+                                                    <i class="iconly-boldShow"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h6 class="text-muted font-semibold">Last Collect</h6>
+                                                <h6 class="font-extrabold mb-0">2026-04-10</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-lg-3 col-md-6">
+                                <div class="card">
+                                    <div class="card-body px-3 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stats-icon blue">
+                                                    <i class="iconly-boldProfile"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h6 class="text-muted font-semibold">OK</h6>
+                                                <h6 class="font-extrabold mb-0">3</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-lg-3 col-md-6">
+                                <div class="card">
+                                    <div class="card-body px-3 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stats-icon green">
+                                                    <i class="iconly-boldAdd-User"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h6 class="text-muted font-semibold">WARN</h6>
+                                                <h6 class="font-extrabold mb-0">0</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-lg-3 col-md-6">
+                                <div class="card">
+                                    <div class="card-body px-3 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stats-icon red">
+                                                    <i class="iconly-boldBookmark"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <h6 class="text-muted font-semibold">CRIT</h6>
+                                                <h6 class="font-extrabold mb-0">0</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4>Server Status</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-lg">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Server</th>
+                                                        <th>IP</th>
+                                                        <th>Status</th>
+                                                        <th>Checks</th>
+                                                        <th>Link</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>aimie-dev-server-a-01</td>
+                                                        <td>10.15.100.127</td>
+                                                        <td><span class="badge bg-success">OK</span></td>
+                                                        <td>12 checks</td>
+                                                        <td><a href="/server/aimie-dev-server-a-01" class="btn btn-sm btn-primary">detail</a></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>aimie-dev-server-c-01</td>
+                                                        <td>10.15.103.120</td>
+                                                        <td><span class="badge bg-warning text-dark">WARN</span></td>
+                                                        <td>10 checks</td>
+                                                        <td><a href="/server/aimie-dev-server-c-01" class="btn btn-sm btn-primary">detail</a></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>aimie-bastion</td>
+                                                        <td>10.15.30.10</td>
+                                                        <td><span class="badge bg-danger">CRIT</span></td>
+                                                        <td>8 checks</td>
+                                                        <td><a href="/server/aimie-bastion" class="btn btn-sm btn-primary">detail</a></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <div class="card">
+                            <div class="card-body py-4 px-4">
+                                <h5 class="font-bold">Watchdog Info</h5>
+                                <h6 class="text-muted mb-0">Monitoring UI template test</h6>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Commands</h4>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Collect</strong><br><code>python run.py collect</code></p>
+                                <p><strong>Web</strong><br><code>python run.py web --port 8080</code></p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Status Note</h4>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2">이 페이지는 Mazer 템플릿이 Flask에서 정상 적용되는지 확인하는 테스트 화면입니다.</p>
+                                <p class="mb-0">정상 확인 후 기존 dashboard.html에 붙이면 됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <footer>
+                <div class="footer clearfix mb-0 text-muted">
+                    <div class="float-start">
+                        <p>2026 &copy; aimie-watchdog</p>
+                    </div>
+                    <div class="float-end">
+                        <p>Template based on Mazer</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='mazer/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='mazer/assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='mazer/assets/vendors/apexcharts/apexcharts.js') }}"></script>
+    <script src="{{ url_for('static', filename='mazer/assets/js/pages/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='mazer/assets/js/main.js') }}"></script>
+</body>
+
+</html>

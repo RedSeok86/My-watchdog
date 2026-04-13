@@ -3,31 +3,52 @@
 {% block title %}aimie-watchdog{% endblock %}
 
 {% block content %}
-  <!-- 상단 요약 -->
+  <div class="page-header mb-4">
+    <div>
+      <h2 class="page-title mb-1">Dashboard</h2>
+      <div class="page-subtitle">서버 상태를 한눈에 확인하는 모니터링 대시보드</div>
+    </div>
+  </div>
+
   {% if not snapshot %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <p class="text-secondary mb-0">
-          아직 스냅샷이 없습니다. <code>python run.py collect</code> 먼저 실행하세요.
-        </p>
-      </div>
+    <div class="empty-card">
+      <p class="muted mb-2">아직 스냅샷이 없습니다.</p>
+      <p class="mb-0">먼저 <code>python run.py collect</code> 를 실행하세요.</p>
     </div>
   {% else %}
-    <div class="card mb-3">
-      <div class="card-body d-flex flex-wrap align-items-center gap-2">
-        <span class="text-secondary">마지막 수집:</span>
-        <strong>{{ snapshot.ts }}</strong>
-        <span class="text-secondary">/ OK: {{ snapshot.summary.ok }}</span>
-        <span class="text-secondary">/ WARN: {{ snapshot.summary.warn }}</span>
-        <span class="text-secondary">/ CRIT: {{ snapshot.summary.crit }}</span>
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Last Collect</div>
+        <div class="summary-value summary-time">{{ snapshot.ts }}</div>
       </div>
-    </div>
+
+      <div class="summary-card">
+        <div class="summary-label">OK</div>
+        <div class="summary-value text-ok">{{ snapshot.summary.ok }}</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">WARN</div>
+        <div class="summary-value text-warn">{{ snapshot.summary.warn }}</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">CRIT</div>
+        <div class="summary-value text-crit">{{ snapshot.summary.crit }}</div>
+      </div>
+    </section>
   {% endif %}
 
-  <!-- 서버 목록 -->
-  <div class="card">
-    <div class="table-responsive">
-      <table class="table table-vcenter card-table mb-0">
+  <section class="content-card mt-4">
+    <div class="section-header">
+      <div>
+        <h3 class="section-title">Server Status</h3>
+        <p class="section-desc">등록된 서버들의 현재 상태와 체크 결과</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="app-table">
         <thead>
           <tr>
             <th>Server</th>
@@ -37,178 +58,50 @@
             <th>Link</th>
           </tr>
         </thead>
-
         <tbody>
           {% for s in servers %}
             {% set row = status_map.get(s.name) if status_map else None %}
-
-            <!-- 서버 기본 row -->
             <tr>
-              <td class="fw-semibold">{{ s.name }}</td>
-              <td>{{ s.ip }}</td>
-
+              <td>
+                <div class="server-name">{{ s.name }}</div>
+              </td>
+              <td>
+                <span class="server-ip">{{ s.ip }}</span>
+              </td>
               <td>
                 {% if row %}
-                  {% set st = row.get('status') %}
-                  {% if st == 'OK' %}
-                    <span class="badge bg-success-lt text-success">OK</span>
-                  {% elif st == 'WARN' %}
-                    <span class="badge bg-warning-lt text-warning">WARN</span>
-                  {% elif st == 'CRIT' %}
-                    <span class="badge bg-danger-lt text-danger">CRIT</span>
-                  {% else %}
-                    <span class="badge bg-secondary-lt text-secondary">{{ st }}</span>
-                  {% endif %}
+                  <span class="status-badge status-{{ row.status|lower }}">
+                    {{ row.status }}
+                  </span>
                 {% else %}
-                  <span class="text-secondary">N/A</span>
+                  <span class="status-badge status-na">N/A</span>
                 {% endif %}
               </td>
-
               <td>
                 {% if row %}
-                  {{ row.checks | length }} checks
+                  <span class="check-count">{{ row.checks | length }} checks</span>
                 {% else %}
-                  <span class="text-secondary">-</span>
+                  <span class="muted">-</span>
                 {% endif %}
               </td>
-
               <td>
-                <a href="{{ url_for('watchdog.server_detail', name=s.name) }}"
-                   class="btn btn-sm btn-outline-primary">
-                  detail
-                </a>
+                <a href="/server/{{ s.name }}" class="detail-btn">detail</a>
               </td>
             </tr>
-
-            <!-- 알림 배너 row -->
-            {% set a = alerts.get(s.name) if alerts else None %}
-            {% if a %}
-              {% set ack_id = acks.get(s.name, {}).get("ack_alert_id") if acks else None %}
-              {% if a.get("alert_id") != ack_id %}
-                {% set cnt  = a.get("count", 1) %}
-                {% set crit = a.get("crit_count", 0) %}
-                {% set warn = a.get("warn_count", 0) %}
-
-                <tr>
-                  <td colspan="5" class="p-0 border-0">
-                    <div class="alert alert-warning mb-0 rounded-0 border-0 border-start border-4"
-                         style="--tblr-alert-bg: #fff7e6; --tblr-alert-border-color: #fa8c16;">
-                      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <div class="me-2">
-                          <strong>
-                            {% if cnt <= 1 %}
-                              변경사항 1건 발견
-                            {% else %}
-                              변경사항 {{ cnt }}건 발견 (CRIT {{ crit }} / WARN {{ warn }})
-                            {% endif %}
-                          </strong>
-
-                          <span class="ms-2">
-                            {{ a.get("summary", "변경사항이 발견되었습니다.") }}
-                            {% if cnt > 1 %}
-                              외 {{ cnt - 1 }}건
-                            {% endif %}
-                          </span>
-                        </div>
-
-                        <!-- 확인 + 상세페이지 이동 -->
-                        <form method="post"
-                              action="{{ url_for('watchdog.ack_server', server_name=s.name) }}"
-                              class="m-0">
-                          <input type="hidden" name="next" value="{{ url_for('watchdog.server_detail', name=s.name) }}">
-                          <button type="submit" class="btn btn-sm btn-warning">
-                            확인 후 상세보기
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              {% endif %}
-            {% endif %}
           {% endfor %}
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 
-  <!-- 하단 안내 -->
-  <div class="card mt-3">
-    <div class="card-body py-2">
-      <p class="text-secondary mb-0">
-        수집 실행: <code>python run.py collect</code> /
-        웹 실행: <code>python run.py web --port 8080</code>
-      </p>
+  <section class="footer-card mt-4">
+    <div class="footer-command">
+      <span class="muted">수집 실행</span>
+      <code>python run.py collect</code>
     </div>
-  </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  // 기본 120초 (원하면 60초/300초로 조절)
-  const REFRESH_SEC = 120;
-
-  const KEY = "aimie_auto_refresh";
-  const saved = localStorage.getItem(KEY);
-  let enabled = (saved === null) ? true : (saved === "1"); // 기본 ON
-
-  // 자동 새로고침 바
-  const bar = document.createElement("div");
-  bar.className = "card mb-3";
-  bar.innerHTML = `
-    <div class="card-body py-2">
-      <div class="d-flex flex-wrap align-items-center gap-3">
-        <label class="form-check m-0" style="cursor:pointer;">
-          <input class="form-check-input" type="checkbox" id="autoRefreshChk">
-          <span class="form-check-label">자동 새로고침</span>
-        </label>
-        <span class="text-secondary">다음 갱신까지 <b id="countdown"></b>초</span>
-        <button id="refreshNowBtn" type="button" class="btn btn-sm btn-outline-secondary">지금 새로고침</button>
-      </div>
+    <div class="footer-command">
+      <span class="muted">웹 실행</span>
+      <code>python run.py web --port 8080</code>
     </div>
-  `;
-
-  // content 블록의 첫 카드 앞에 삽입
-  const container = document.querySelector(".container-xl.py-4");
-  if (container) {
-    const firstCard = container.querySelector(".card");
-    if (firstCard) {
-      container.insertBefore(bar, firstCard);
-    } else {
-      container.prepend(bar);
-    }
-  }
-
-  const chk = document.getElementById("autoRefreshChk");
-  const cd  = document.getElementById("countdown");
-  const btn = document.getElementById("refreshNowBtn");
-
-  if (chk && cd && btn) {
-    chk.checked = enabled;
-
-    btn.addEventListener("click", () => location.reload());
-
-    let remain = REFRESH_SEC;
-    cd.textContent = remain;
-
-    chk.addEventListener("change", () => {
-      enabled = chk.checked;
-      localStorage.setItem(KEY, enabled ? "1" : "0");
-      if (enabled) {
-        remain = REFRESH_SEC;
-        cd.textContent = remain;
-      }
-    });
-
-    setInterval(() => {
-      if (!enabled) return;
-      remain -= 1;
-      if (remain <= 0) {
-        location.reload();
-      } else {
-        cd.textContent = remain;
-      }
-    }, 1000);
-  }
-</script>
+  </section>
 {% endblock %}
