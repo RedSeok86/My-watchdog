@@ -9,3 +9,11 @@ th { background: #f6f6f6; text-align: left; }
 
 .muted { color: #777; }
 code { white-space: pre-wrap; }
+
+.logo-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: #435ebe;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
